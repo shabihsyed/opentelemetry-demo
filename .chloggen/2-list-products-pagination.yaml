@@ -1,0 +1,5 @@
+change_type: enhancement
+component: product-catalog
+note: Add optional pagination to `ListProducts` through the `page-size` and `page-token` gRPC metadata keys, returning `next-page-token` in the response headers.
+issues: [2]
+subtext: Requests without either key still return every product.

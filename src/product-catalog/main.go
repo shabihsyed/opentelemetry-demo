@@ -43,6 +43,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
@@ -374,16 +375,49 @@ func (p *productCatalog) Watch(req *healthpb.HealthCheckRequest, ws healthpb.Hea
 func (p *productCatalog) ListProducts(ctx context.Context, req *pb.Empty) (*pb.ListProductsResponse, error) {
 	span := trace.SpanFromContext(ctx)
 
+	md, _ := metadata.FromIncomingContext(ctx)
+	pageSize, err := singleMetadataValue(md, pageSizeMetadataKey)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	pageToken, err := singleMetadataValue(md, pageTokenMetadataKey)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
 	products, err := loadProductsFromDB(ctx)
 	if err != nil {
 		span.SetStatus(otelcodes.Error, err.Error())
 		return nil, status.Errorf(codes.Internal, "failed to load products: %v", err)
 	}
 
+	page, nextPageToken, err := paginateProducts(products, pageSize, pageToken)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+	if nextPageToken != "" {
+		if err := grpc.SetHeader(ctx, metadata.Pairs(nextPageTokenMetadataKey, nextPageToken)); err != nil {
+			span.SetStatus(otelcodes.Error, err.Error())
+			return nil, status.Errorf(codes.Internal, "failed to set %s: %v", nextPageTokenMetadataKey, err)
+		}
+	}
+
 	span.SetAttributes(
-		attribute.Int("demo.product.count", len(products)),
+		attribute.Int("demo.product.count", len(page)),
 	)
-	return &pb.ListProductsResponse{Products: products}, nil
+	return &pb.ListProductsResponse{Products: page}, nil
+}
+
+func singleMetadataValue(md metadata.MD, key string) (string, error) {
+	values := md.Get(key)
+	switch len(values) {
+	case 0:
+		return "", nil
+	case 1:
+		return values[0], nil
+	default:
+		return "", fmt.Errorf("%s must be set at most once", key)
+	}
 }
 
 func (p *productCatalog) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.Product, error) {
