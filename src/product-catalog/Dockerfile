@@ -1,13 +1,11 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-
 FROM docker.io/library/golang:1.27.2-bookworm@sha256:5cf287a799e6b94384bad13d16b14904c531f51ba65792237e122ce42b392f61 AS builder
 
 WORKDIR /usr/src/app/
 
-COPY ./src/product-catalog/go.mod go.mod
-COPY ./src/product-catalog/go.sum go.sum
+COPY ./src/product-catalog/go.mod ./src/product-catalog/go.sum ./
 
 RUN go mod download
 
