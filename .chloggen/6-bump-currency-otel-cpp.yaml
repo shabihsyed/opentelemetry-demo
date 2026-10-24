@@ -1,0 +1,7 @@
+change_type: enhancement
+
+component: currency
+
+note: Bump opentelemetry-cpp from 1.28.0 to 1.30.0, which includes the fix for GHSA-j5cq-83xw-rx48.
+
+issues: [6]
