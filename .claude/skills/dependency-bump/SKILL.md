@@ -3,6 +3,8 @@ name: dependency-bump
 description: Find and bump one pinned dependency for a service (base image digest, build ARG, .env version, go.mod/package manifest). Use for dependency-update issues.
 ---
 
+# Dependency bump
+
 1. Find where the service's versions are pinned. Look in this order:
    - `src/<service>/Dockerfile` (`FROM ...@sha256:...`, `ARG ..._VERSION`)
    - `.env` and `.env.override` (`*_VERSION` variables passed as build args)

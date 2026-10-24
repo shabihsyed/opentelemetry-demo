@@ -3,6 +3,8 @@ name: pr-ready
 description: Final checklist before pushing a branch for a PR in this repo (branch name, commit format, changelog entry, scope). Use right before git push.
 ---
 
+# PR ready checklist
+
 Check each item and fix anything that fails before pushing:
 
 - Branch is named `<issue-number>-<slug>` and is not `main`.

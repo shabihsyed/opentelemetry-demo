@@ -3,6 +3,8 @@ name: go-service-checks
 description: Run formatting, vet and race-detector tests for a Go service under src/ (checkout, product-catalog, ...). Use before committing any Go change.
 ---
 
+# Go service checks
+
 Run these from the service folder (for example `src/checkout`), in order, and stop at the first failure:
 
 1. `gofmt -l .` — must print nothing. If it lists files, run `gofmt -w <file>` on them.
@@ -13,5 +15,6 @@ Run these from the service folder (for example `src/checkout`), in order, and st
 Report the exact commands you ran and their result. Do not commit while any step fails.
 
 Notes:
+
 - The generated code in `genproto/` is not edited by hand.
 - product-catalog loads products from PostgreSQL at runtime; keep new logic in pure functions so it can be unit tested without a database.
