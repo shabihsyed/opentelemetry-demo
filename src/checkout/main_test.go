@@ -27,6 +27,7 @@ func (fn roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) 
 }
 
 func TestSendOrderConfirmationHasBoundedTimeout(t *testing.T) {
+	var start time.Time
 	client := &http.Client{
 		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 			deadline, ok := req.Context().Deadline()
@@ -34,9 +35,8 @@ func TestSendOrderConfirmationHasBoundedTimeout(t *testing.T) {
 				return nil, fmt.Errorf("email request context has no deadline")
 			}
 
-			remaining := time.Until(deadline)
-			if remaining <= 0 || remaining > time.Second {
-				return nil, fmt.Errorf("email request timeout = %v, want at most %v", remaining, time.Second)
+			if !deadline.After(start) || deadline.After(time.Now().Add(emailRequestTimeout)) {
+				return nil, fmt.Errorf("email request timeout = %v, want at most %v", deadline.Sub(start), emailRequestTimeout)
 			}
 
 			return &http.Response{
@@ -52,6 +52,7 @@ func TestSendOrderConfirmationHasBoundedTimeout(t *testing.T) {
 		httpClient:   client,
 	}
 
+	start = time.Now()
 	err := cs.sendOrderConfirmation(context.Background(), "test@example.com", &pb.OrderResult{})
 	if err != nil {
 		t.Fatalf("sendOrderConfirmation() error = %v", err)
