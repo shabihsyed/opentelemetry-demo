@@ -1,0 +1,4 @@
+change_type: bug_fix
+component: product-catalog
+note: Copy `pagination.go` into the Docker build so the product-catalog image compiles again.
+issues: [14]
